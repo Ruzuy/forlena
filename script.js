@@ -12,7 +12,8 @@ const scaleSteps = [1, 1.10, 1.24, 1.42, 1.70];
 
 function updateYesSize() {
     const s = scaleSteps[Math.min(yesClicks, scaleSteps.length - 1)];
-    yesBtn.style.transform = `scale(${s})`;
+    // важно: сохраняем translate(-50%, -50%) из CSS, добавляем scale
+    yesBtn.style.transform = `translate(-50%, -50%) scale(${s})`;
 }
 
 function updateNoText() {
@@ -29,7 +30,10 @@ function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
 }
 
-// Двигаем "Нет" строго внутри run-area
+/**
+ * Двигаем "Нет" в пределах runArea.
+ * Координаты считаем так, чтобы кнопка целиком помещалась.
+ */
 function moveNoInsideRunArea() {
     const padding = 10;
 
@@ -44,22 +48,20 @@ function moveNoInsideRunArea() {
     const maxX = Math.max(minX, areaW - bw - padding);
     const maxY = Math.max(minY, areaH - bh - padding);
 
-    // Дополнительно избегаем зоны центра (где "Да"), чтобы не наезжало
+    // избегаем зоны центра (где "Да")
     const centerX = areaW / 2;
     const centerY = areaH / 2;
 
     let x = minX, y = minY;
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
         const tx = minX + Math.random() * (maxX - minX);
         const ty = minY + Math.random() * (maxY - minY);
 
-        // расстояние от центра
-        const dx = Math.abs(tx + bw / 2 - centerX);
-        const dy = Math.abs(ty + bh / 2 - centerY);
+        const dx = Math.abs((tx + bw / 2) - centerX);
+        const dy = Math.abs((ty + bh / 2) - centerY);
 
-        // чем больше — тем лучше (хотим подальше от центра)
-        if (dx + dy > Math.min(areaW, areaH) * 0.35) {
+        if (dx + dy > Math.min(areaW, areaH) * 0.33) {
             x = tx; y = ty;
             break;
         }
@@ -69,8 +71,10 @@ function moveNoInsideRunArea() {
     x = clamp(Math.floor(x), minX, maxX);
     y = clamp(Math.floor(y), minY, maxY);
 
-    noBtn.style.left = `${x}px`;
-    noBtn.style.top  = `${y}px`;
+    // абсолютные координаты внутри runArea
+    noBtn.style.left = `${x + bw / 2}px`;
+    noBtn.style.top  = `${y + bh / 2}px`;
+    noBtn.style.transform = "translate(-50%, -50%)";
 }
 
 function hideNo() {
@@ -93,7 +97,6 @@ function finish() {
     }, 560);
 }
 
-// Один обработчик для "Нет" (без двойных срабатываний)
 function handleNoAttempt(e) {
     e.preventDefault();
 
@@ -108,7 +111,7 @@ function handleNoAttempt(e) {
     noStage += 1;
     updateNoText();
 
-    // каждый "нет" делает "да" более заманчивой :)
+    // каждый "нет" усиливает "да"
     yesClicks = Math.min(yesClicks + 1, 4);
     updateYesSize();
 
@@ -116,7 +119,7 @@ function handleNoAttempt(e) {
     else moveNoInsideRunArea();
 }
 
-// События: pointerdown + (только для мыши) pointerenter
+// единые события без дублей
 noBtn.addEventListener("pointerdown", handleNoAttempt);
 noBtn.addEventListener("pointerenter", (e) => {
     if (e.pointerType === "mouse") handleNoAttempt(e);
@@ -128,39 +131,14 @@ yesBtn.addEventListener("click", () => {
     updateYesSize();
 });
 
-// Плавающие сердечки на фоне
-function initHearts() {
-    const container = document.querySelector(".valentine");
-    if (!container) return;
-
-    const wrap = document.createElement("div");
-    wrap.className = "hearts";
-    container.appendChild(wrap);
-
-    const colors = ["rgba(255,255,255,.9)", "rgba(255,90,122,.6)", "rgba(255,209,220,.7)"];
-
-    for (let i = 0; i < 14; i++) {
-        const h = document.createElement("div");
-        h.className = "heart";
-        h.style.left = `${Math.random() * 100}%`;
-        h.style.bottom = `${-10 - Math.random() * 30}%`;
-        h.style.color = colors[Math.floor(Math.random() * colors.length)];
-        h.style.animationDuration = `${6 + Math.random() * 6}s`;
-        h.style.animationDelay = `${Math.random() * 4}s`;
-        h.style.opacity = `${0.10 + Math.random() * 0.22}`;
-        h.style.transform = `rotate(45deg) scale(${0.8 + Math.random() * 0.9})`;
-        wrap.appendChild(h);
-    }
-}
-
 // init
 updateNoText();
-updateYesSize();
 yesBtn.classList.add("pulse");
-initHearts();
+updateYesSize();
 
-// стартовая позиция "Нет" (внутри run-area)
+// стартовая позиция "Нет" ровно справа от "Да"
 setTimeout(() => {
-    noBtn.style.left = "60%";
-    noBtn.style.top = "18%";
+    noBtn.style.left = "calc(50% + 110px)";
+    noBtn.style.top = "50%";
+    noBtn.style.transform = "translate(-50%, -50%)";
 }, 0);

@@ -1,20 +1,16 @@
-/* =========================
-   THEME / BASE
-========================= */
 :root{
-    --card-bg: rgba(255,255,255,.88);
+    --card-bg: rgba(255,255,255,.90);
     --shadow: 0 16px 40px rgba(0,0,0,.22);
     --shadow-soft: 0 10px 22px rgba(0,0,0,.18);
     --radius: 20px;
-
-    --green: #198754;
-    --green-dark: #0f5132;
-    --red: #dc3545;
 
     --text: #1b1b1b;
     --muted: rgba(0,0,0,.55);
 
     --blur: 10px;
+
+    /* Финальный розовый */
+    --pink: #ff5aa5;
 }
 
 *{ box-sizing: border-box; }
@@ -25,18 +21,15 @@ body{
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     color: var(--text);
 
-    /* Фон */
     background-image: url("./assets/bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 
-    /* На мобилке адресная строка не ломает высоту */
     min-height: 100dvh;
     overflow-x: hidden;
 }
 
-/* Затемнение/градиенты поверх фона */
 .valentine{
     min-height: 100dvh;
     padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
@@ -50,78 +43,25 @@ body{
             rgba(0,0,0,.24);
 }
 
-/* =========================
-   FLOATING HEARTS BACKGROUND
-========================= */
-.hearts{
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-}
-
-.heart{
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    transform: rotate(45deg);
-    opacity: .25;
-    animation: floatUp linear infinite;
-    color: rgba(255,255,255,.9);
-}
-
-.heart::before,
-.heart::after{
-    content:"";
-    position:absolute;
-    width: 14px;
-    height: 14px;
-    background: currentColor;
-    border-radius: 50%;
-}
-
-.heart{
-    background: currentColor;
-}
-.heart::before{ left: -7px; }
-.heart::after { top: -7px; }
-
-@keyframes floatUp{
-    0%   { transform: translateY(110%) rotate(45deg) scale(.9); opacity: 0; }
-    10%  { opacity: .22; }
-    100% { transform: translateY(-140%) rotate(45deg) scale(1.2); opacity: 0; }
-}
-
-/* =========================
-   CARD
-========================= */
+/* Card */
 .cardish{
     width: min(540px, 100%);
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 18px;
+    padding: 18px 18px 22px;
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
-    z-index: 1;
 
     backdrop-filter: blur(var(--blur));
     -webkit-backdrop-filter: blur(var(--blur));
-
-    animation: cardIn 520ms ease both;
-}
-
-@keyframes cardIn{
-    0% { transform: translateY(14px) scale(.98); opacity: 0; }
-    100%{ transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .cardish::before{
     content:"";
     position:absolute;
     inset:-2px;
-    background: radial-gradient(500px 220px at 30% 10%, rgba(255, 182, 193, .35), transparent 60%);
+    background: radial-gradient(520px 240px at 30% 10%, rgba(255, 182, 193, .35), transparent 60%);
     pointer-events:none;
 }
 
@@ -134,13 +74,11 @@ body{
     text-transform: lowercase;
 }
 
-/* =========================
-   IMAGE
-========================= */
+/* Image */
 .image-wrap{
     display: grid;
     place-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
 .center-image{
@@ -150,121 +88,127 @@ body{
     box-shadow: var(--shadow-soft);
     user-select: none;
     -webkit-user-drag: none;
-    animation: picPop 700ms cubic-bezier(.2,.9,.2,1) both;
 }
 
-@keyframes picPop{
-    0% { transform: scale(.95); opacity: 0; }
-    100%{ transform: scale(1); opacity: 1; }
-}
-
-/* =========================
-   RUN AREA (где бегает "Нет")
-========================= */
+/* --- Run area (buttons + final text) --- */
 .run-area{
     position: relative;
     width: 100%;
-    height: 150px;            /* зона побольше */
+    height: 150px;           /* место для кнопок и финала */
     margin-top: 6px;
-    display: grid;
-    place-items: center;
 }
 
-/* bootstrap btn fix */
-.btn{
-    border-radius: 999px !important;
-}
+/* Bootstrap btn rounding */
+.btn{ border-radius: 999px !important; }
 
-/* Зеленая */
+/* Buttons row: ровное расположение */
 .yes-btn{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     font-weight: 900;
     font-size: 18px;
     padding: 12px 28px;
+    box-shadow: 0 10px 20px rgba(25,135,84,.25);
     transform-origin: center;
     transition: transform 180ms ease, filter 180ms ease;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 10px 20px rgba(25,135,84,.25);
+    z-index: 2;
 }
 
-.yes-btn.pulse{
-    animation: yesPulse 1.4s ease-in-out infinite;
-}
-@keyframes yesPulse{
-    0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
-    50%      { transform: translateY(-1px) scale(1.03); filter: brightness(1.05); }
-}
-
-.yes-btn:active{
-    transform: scale(.98);
-}
-
-/* Красная — всегда absolute внутри run-area */
+/* Красная стартует справа от зелёной на одной линии */
 .no-btn{
     position: absolute;
-    left: 60%;
-    top: 18%;
+    left: calc(50% + 110px);
+    top: 50%;
+    transform: translate(-50%, -50%);
     font-weight: 900;
     font-size: 16px;
     padding: 10px 22px;
-    z-index: 2;
-
-    transition: left 220ms ease, top 220ms ease, opacity 240ms ease;
+    z-index: 3;
+    transition: left 220ms ease, top 220ms ease, opacity 240ms ease, transform 180ms ease;
 }
 
 .no-btn.shake{
     animation: shake 240ms ease;
 }
+
 @keyframes shake{
-    0%{ transform: translateX(0); }
-    25%{ transform: translateX(-5px); }
-    50%{ transform: translateX(5px); }
-    75%{ transform: translateX(-3px); }
-    100%{ transform: translateX(0); }
+    0%{ transform: translate(-50%, -50%) translateX(0); }
+    25%{ transform: translate(-50%, -50%) translateX(-5px); }
+    50%{ transform: translate(-50%, -50%) translateX(5px); }
+    75%{ transform: translate(-50%, -50%) translateX(-3px); }
+    100%{ transform: translate(-50%, -50%) translateX(0); }
 }
 
-/* =========================
-   FINAL TEXT + ANIMATIONS
-========================= */
+/* Финальный текст — по центру и выше, розовый */
 .final-text{
-    margin-top: 12px;
+    position: absolute;
+    left: 50%;
+    top: 44%;                 /* подняли выше, чтобы было по центру */
+    transform: translate(-50%, -50%);
     text-align: center;
     font-weight: 1000;
     letter-spacing: -0.02em;
     font-size: clamp(22px, 5vw, 36px);
-    color: #ff5aa5; /* розовый */
+    color: var(--pink);
     min-height: 46px;
+    width: 100%;
+    padding: 0 10px;
+    z-index: 1;
+    opacity: 0;               /* появится анимацией */
 }
 
-.fade-pop{ animation: fadePop 420ms ease forwards; }
+/* Animations */
+.fade-pop{
+    animation: fadePop 420ms ease forwards;
+}
+
 @keyframes fadePop{
-    0% { opacity: 0; transform: translateY(8px) scale(.98); }
-    100%{ opacity: 1; transform: translateY(0) scale(1); }
+    0% { opacity: 0; transform: translate(-50%, -50%) translateY(8px) scale(.98); }
+    100%{ opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
 }
 
 .yes-disappear{
     animation: yesVanish 560ms cubic-bezier(.2,.9,.2,1) forwards;
 }
+
 @keyframes yesVanish{
-    0%   { transform: scale(1); opacity: 1; }
-    50%  { transform: scale(1.25); opacity: .35; }
-    100% { transform: scale(.88); opacity: 0; }
+    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(1.25); opacity: .35; }
+    100% { transform: translate(-50%, -50%) scale(.88); opacity: 0; }
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* Pulse (optional, nice) */
+.yes-btn.pulse{
+    animation: yesPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes yesPulse{
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.06); }
+}
+
+/* Mobile */
 @media (max-width: 420px){
     .run-area{ height: 170px; }
     .yes-btn{ font-size: 17px; padding: 12px 24px; }
-    .no-btn{ font-size: 15px; padding: 10px 18px; }
+
+    /* на маленьких экранах делаем меньше смещение вправо */
+    .no-btn{
+        font-size: 15px;
+        padding: 10px 18px;
+        left: calc(50% + 96px);
+    }
+
+    .final-text{
+        top: 46%;
+    }
 }
 
-/* =========================
-   ACCESSIBILITY
-========================= */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
-    .cardish, .center-image, .yes-btn.pulse, .heart{
+    .yes-btn.pulse, .fade-pop, .yes-disappear, .shake{
         animation: none !important;
         transition: none !important;
     }
