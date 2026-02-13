@@ -1,15 +1,15 @@
 const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
+const runArea = document.getElementById("runArea");
 const finalText = document.getElementById("finalText");
 
-// ====== Stages ======
 let yesClicks = 0;
 let noStage = 0;
+let cooldown = false;
 
 const noTexts = ["Нет.", "Подумай еще раз.", "Точно?", "Последний шанс..."];
 const scaleSteps = [1, 1.10, 1.24, 1.42, 1.70];
 
-// ====== Helpers ======
 function updateYesSize() {
     const s = scaleSteps[Math.min(yesClicks, scaleSteps.length - 1)];
     yesBtn.style.transform = `scale(${s})`;
@@ -21,70 +21,62 @@ function updateNoText() {
 
 function shakeNo() {
     noBtn.classList.remove("shake");
-    void noBtn.offsetWidth; // restart anim
+    void noBtn.offsetWidth;
     noBtn.classList.add("shake");
 }
 
-function moveNoSomewhere() {
-    // бегаем внутри зоны кнопок (внутри карточки)
-    noBtn.classList.add("is-running");
-
-    const area = document.getElementById("buttonsWrap");
-
-    // размеры зоны
-    const areaRect = area.getBoundingClientRect();
-
-    // размеры кнопки
-    const btnRect = noBtn.getBoundingClientRect();
-    const bw = btnRect.width || 120;
-    const bh = btnRect.height || 44;
-
-    const padding = 8;
-
-    // доступные границы внутри area
-    const maxX = Math.max(padding, areaRect.width - bw - padding);
-    const maxY = Math.max(padding, areaRect.height - bh - padding);
-
-    // рандомная точка внутри area
-    let x = padding + Math.random() * (maxX - padding);
-    let y = padding + Math.random() * (maxY - padding);
-
-    // применяем как absolute внутри area
-    noBtn.style.left = `${Math.floor(x)}px`;
-    noBtn.style.top  = `${Math.floor(y)}px`;
+function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
 }
 
+// Двигаем "Нет" строго внутри run-area
+function moveNoInsideRunArea() {
+    const padding = 10;
 
+    const areaW = runArea.clientWidth;
+    const areaH = runArea.clientHeight;
 
-function sendNoOffScreen() {
-    // НЕ улетаем, а растворяемся и исчезаем
-    noBtn.classList.add("is-running");
+    const bw = noBtn.offsetWidth || 120;
+    const bh = noBtn.offsetHeight || 44;
+
+    const minX = padding;
+    const minY = padding;
+    const maxX = Math.max(minX, areaW - bw - padding);
+    const maxY = Math.max(minY, areaH - bh - padding);
+
+    // Дополнительно избегаем зоны центра (где "Да"), чтобы не наезжало
+    const centerX = areaW / 2;
+    const centerY = areaH / 2;
+
+    let x = minX, y = minY;
+
+    for (let i = 0; i < 10; i++) {
+        const tx = minX + Math.random() * (maxX - minX);
+        const ty = minY + Math.random() * (maxY - minY);
+
+        // расстояние от центра
+        const dx = Math.abs(tx + bw / 2 - centerX);
+        const dy = Math.abs(ty + bh / 2 - centerY);
+
+        // чем больше — тем лучше (хотим подальше от центра)
+        if (dx + dy > Math.min(areaW, areaH) * 0.35) {
+            x = tx; y = ty;
+            break;
+        }
+        x = tx; y = ty;
+    }
+
+    x = clamp(Math.floor(x), minX, maxX);
+    y = clamp(Math.floor(y), minY, maxY);
+
+    noBtn.style.left = `${x}px`;
+    noBtn.style.top  = `${y}px`;
+}
+
+function hideNo() {
     noBtn.style.opacity = "0";
     noBtn.style.pointerEvents = "none";
     setTimeout(() => (noBtn.style.display = "none"), 260);
-}
-
-function showConfetti() {
-    const layer = document.createElement("div");
-    layer.className = "confetti-layer";
-    document.body.appendChild(layer);
-
-    // Не задаём цвета в CSS по просьбе? (это не график, тут можно)
-    // Сделаю набор пастельных, чтобы было мило.
-    const colors = ["#ff5a7a", "#ffb3c1", "#ffd166", "#8ecae6", "#b7e4c7", "#cdb4db"];
-
-    const count = 28;
-    for (let i = 0; i < count; i++) {
-        const c = document.createElement("div");
-        c.className = "confetti";
-        c.style.left = `${Math.random() * 100}vw`;
-        c.style.animationDelay = `${Math.random() * 120}ms`;
-        c.style.background = colors[Math.floor(Math.random() * colors.length)];
-        c.style.transform = `translateY(-20vh) rotate(${Math.random() * 120}deg)`;
-        layer.appendChild(c);
-    }
-
-    setTimeout(() => layer.remove(), 1100);
 }
 
 function finish() {
@@ -98,52 +90,54 @@ function finish() {
         finalText.classList.remove("fade-pop");
         void finalText.offsetWidth;
         finalText.classList.add("fade-pop");
-        showConfetti();
     }, 560);
 }
 
-// ====== “No attempt” logic ======
+// Один обработчик для "Нет" (без двойных срабатываний)
 function handleNoAttempt(e) {
     e.preventDefault();
 
     if (noBtn.style.display === "none") return;
+    if (cooldown) return;
 
-    // визуально "сопротивляется"
+    cooldown = true;
+    setTimeout(() => (cooldown = false), 260);
+
     shakeNo();
 
     noStage += 1;
     updateNoText();
 
-    if (noStage >= 4) {
-        sendNoOffScreen();
-    } else {
-        moveNoSomewhere();
-    }
-
-    // При каждом “Нет” слегка увеличиваем “Да”, чтобы подсознательно вело к нужному
+    // каждый "нет" делает "да" более заманчивой :)
     yesClicks = Math.min(yesClicks + 1, 4);
     updateYesSize();
+
+    if (noStage >= 4) hideNo();
+    else moveNoInsideRunArea();
 }
 
-// ====== Events ======
+// События: pointerdown + (только для мыши) pointerenter
+noBtn.addEventListener("pointerdown", handleNoAttempt);
+noBtn.addEventListener("pointerenter", (e) => {
+    if (e.pointerType === "mouse") handleNoAttempt(e);
+});
+
 yesBtn.addEventListener("click", () => {
     if (noBtn.style.display === "none") return finish();
     yesClicks += 1;
     updateYesSize();
 });
 
-noBtn.addEventListener("mouseenter", handleNoAttempt);
-noBtn.addEventListener("click", handleNoAttempt);
-noBtn.addEventListener("touchstart", handleNoAttempt, { passive: false });
-
-// ====== Hearts background ======
+// Плавающие сердечки на фоне
 function initHearts() {
-    // создаём слой сердечек
+    const container = document.querySelector(".valentine");
+    if (!container) return;
+
     const wrap = document.createElement("div");
     wrap.className = "hearts";
-    document.body.querySelector(".valentine")?.appendChild(wrap);
+    container.appendChild(wrap);
 
-    const colors = ["#ff5a7a", "#ff8fab", "#ffd1dc", "#ffffff"];
+    const colors = ["rgba(255,255,255,.9)", "rgba(255,90,122,.6)", "rgba(255,209,220,.7)"];
 
     for (let i = 0; i < 14; i++) {
         const h = document.createElement("div");
@@ -159,14 +153,14 @@ function initHearts() {
     }
 }
 
-// ====== Init ======
+// init
 updateNoText();
-// стартовая позиция "Нет" внутри area (чтобы не налезала)
-setTimeout(() => {
-    noBtn.classList.add("is-running");
-    noBtn.style.left = "62%";
-    noBtn.style.top = "18%";
-}, 0);
 updateYesSize();
 yesBtn.classList.add("pulse");
 initHearts();
+
+// стартовая позиция "Нет" (внутри run-area)
+setTimeout(() => {
+    noBtn.style.left = "60%";
+    noBtn.style.top = "18%";
+}, 0);
