@@ -26,45 +26,42 @@ function shakeNo() {
 }
 
 function moveNoSomewhere() {
+    // бегаем внутри зоны кнопок (внутри карточки)
     noBtn.classList.add("is-running");
 
-    const padding = 12;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const area = document.getElementById("buttonsWrap");
 
-    const rect = noBtn.getBoundingClientRect();
-    const bw = rect.width || 120;
-    const bh = rect.height || 44;
+    // размеры зоны
+    const areaRect = area.getBoundingClientRect();
 
-    const minX = padding;
-    const maxX = Math.max(minX, vw - bw - padding);
-    const minY = padding;
-    const maxY = Math.max(minY, vh - bh - padding);
+    // размеры кнопки
+    const btnRect = noBtn.getBoundingClientRect();
+    const bw = btnRect.width || 120;
+    const bh = btnRect.height || 44;
 
-    // Пытаемся избегать центра (чтобы реально "убегало")
-    let x, y;
-    for (let i = 0; i < 8; i++) {
-        const tx = Math.floor(minX + Math.random() * (maxX - minX));
-        const ty = Math.floor(minY + Math.random() * (maxY - minY));
-        const dx = Math.abs(tx - vw / 2);
-        const dy = Math.abs(ty - vh / 2);
-        if (dx + dy > Math.min(vw, vh) * 0.35) {
-            x = tx; y = ty; break;
-        }
-        x = tx; y = ty;
-    }
+    const padding = 8;
 
-    noBtn.style.left = `${x}px`;
-    noBtn.style.top = `${y}px`;
+    // доступные границы внутри area
+    const maxX = Math.max(padding, areaRect.width - bw - padding);
+    const maxY = Math.max(padding, areaRect.height - bh - padding);
+
+    // рандомная точка внутри area
+    let x = padding + Math.random() * (maxX - padding);
+    let y = padding + Math.random() * (maxY - padding);
+
+    // применяем как absolute внутри area
+    noBtn.style.left = `${Math.floor(x)}px`;
+    noBtn.style.top  = `${Math.floor(y)}px`;
 }
 
+
+
 function sendNoOffScreen() {
+    // НЕ улетаем, а растворяемся и исчезаем
     noBtn.classList.add("is-running");
-    noBtn.style.left = "120vw";
-    noBtn.style.top = "-30vh";
     noBtn.style.opacity = "0";
     noBtn.style.pointerEvents = "none";
-    setTimeout(() => (noBtn.style.display = "none"), 320);
+    setTimeout(() => (noBtn.style.display = "none"), 260);
 }
 
 function showConfetti() {
@@ -164,6 +161,12 @@ function initHearts() {
 
 // ====== Init ======
 updateNoText();
+// стартовая позиция "Нет" внутри area (чтобы не налезала)
+setTimeout(() => {
+    noBtn.classList.add("is-running");
+    noBtn.style.left = "62%";
+    noBtn.style.top = "18%";
+}, 0);
 updateYesSize();
 yesBtn.classList.add("pulse");
 initHearts();

@@ -230,10 +230,10 @@ body{
     100%{ transform: translateX(0); }
 }
 
-/* Когда убегает — fixed */
+/* "Нет" убегает ТОЛЬКО внутри карточки */
 .no-btn.is-running{
-    position: fixed;
-    z-index: 9999;
+    position: absolute;
+    z-index: 3;
 }
 
 /* =========================
